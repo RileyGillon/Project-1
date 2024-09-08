@@ -1,0 +1,170 @@
+#include <iostream>
+using namespace std;
+
+//define all your classes here (as given above)
+class SparseRow {
+    protected:
+        int row; //Row#
+        int col; //Column#
+        int value; //We will assume that all our values will be integers
+    public:
+        // Default constructor
+        SparseRow() : row(0), col(0), value(0.0) {}        
+        void display() const {
+        std::cout << "Row: " << row << ", Column: " << col << ", Value: " << value << std::endl;
+        }    
+        friend std::ostream& operator<< (ostream& s, const SparseRow);
+        //other methods that are necessary such as get and set
+    public:
+        // Getter for row
+        int getRow() const {
+            return row;
+        }
+        // Setter for row
+        void setRow(int r) {
+            row = r;
+        }
+        // Getter for col
+        int getCol() const {
+            return col;
+        }
+        // Setter for col
+        void setCol(int c) {
+            col = c;
+        }
+        // Getter for value
+        double getValue() const {
+            return value;
+        }
+        // Setter for value
+        void setValue(double v) {
+            value = v;
+        }
+        
+};
+
+class SparseMatrix {
+    protected:
+        int noRows; //Number of rows of the original matrix
+        int noCols; //Number of columns of the original matrix
+        int commonValue; //read from input
+        int noNonSparseValues;
+        SparseRow* myMatrix; //Array
+    public:
+        SparseMatrix() : noRows(0), noCols(0), commonValue(0), noNonSparseValues(0), myMatrix(nullptr) {}
+        SparseMatrix(int n, int m, int cv, int noNSV) 
+        : noRows(n), noCols(m), commonValue(cv), noNonSparseValues(noNSV) {
+        myMatrix = new SparseRow[noNSV]; // Dynamically allocate array of SparseRow
+        }
+        SparseMatrix (int n, int m, int cv, int noNSV); // added 'int noNSV' bc now it can read 4 int
+        SparseMatrix* Transpose (); //Matrix Transpose
+        SparseMatrix* Multiply (SparseMatrix& M);
+        SparseMatrix* Add (SparseMatrix& M);
+        friend std::ostream& operator<< (std::ostream& s, const SparseMatrix& sm);
+        void displayMatrix() const {
+        for (int r = 0; r < noRows; ++r) {
+            for (int c = 0; c < noCols; ++c) {
+                bool printed = false;
+                for (const auto& entry : myMatrix) {
+                    if (entry.getRow() == r && entry.getCol() == c) {
+                        cout << entry.getValue() << " ";
+                        printed = true;
+                        break;
+                    }
+                }
+                if (!printed) {
+                    cout << commonValue << " ";
+                }
+            }
+            cout << endl;
+        }
+    } //Display the matrix in its original format     
+        //other methods that are necessary such as get and set
+    public: 
+        // Getter for noRows
+        int getNoRows() const {
+            return noRows;
+        }
+        // Setter for noRows
+        void setNoRows(int n) {
+            noRows = n;
+        }
+        // Getter for noCols
+        int getNoCols() const {
+            return noCols;
+        }
+        // Setter for noCols
+        void setNoCols(int m) {
+            noCols = m;
+        }
+        // Getter for commonValue
+        int getCommonValue() const {
+            return commonValue;
+        }
+        // Setter for commonValue
+        void setCommonValue(int cv) {
+            commonValue = cv;
+        }
+        // Getter for noNonSparseValues
+        int getNoNonSparseValues() const {
+            return noNonSparseValues;
+        }
+        // Setter for noNonSparseValues
+        void setNoNonSparseValues(int noNSV) {
+            noNonSparseValues = noNSV;
+        }
+        // Getter for myMatrix
+        SparseRow* getMyMatrix() const {
+            return myMatrix;
+        }
+        // Setter for myMatrix
+        void setMyMatrix(SparseRow* matrix) {
+            myMatrix = matrix;
+    }
+};
+
+//write the methods after the class definition
+
+
+
+int main () {
+    int n, m, cv, noNSV;
+    SparseMatrix* temp;
+    
+    cin >> n >> m >> cv >> noNSV;
+    SparseMatrix* firstOne = new SparseMatrix(n, m, cv, noNSV);
+    
+    //Write the Statements to read in the first matrix
+    
+    cin >> n >> m >> cv >> noNSV;
+    SparseMatrix* secondOne = new SparseMatrix(n, m, cv, noNSV);
+    
+    //Write the Statements to read in the second matrix
+    
+    cout << "First one in matrix format" << endl;
+    (*firstOne).displayMatrix();
+    
+    cout << "First one in sparse matrix format" << endl;
+    cout << (*firstOne);
+    
+    cout << "Second one in matrix format" << endl;
+    (*secondOne).displayMatrix();
+    
+    cout << "Second one in sparse matrix format" << endl;
+    cout << (*secondOne);
+    
+    cout << "Transpose of the first one in matrix" << endl;
+    cout << (*(*firstOne).Transpose());
+    
+    cout << "Matrix Addition Result" << endl;
+
+    temp = (*(*firstOne).Add(secondOne));
+    cout << temp;
+    (*temp).displayMatrix();
+    
+    cout << "Matrix Multiplication Result" << endl;
+
+    temp = (*(*firstOne).Multiply(secondOne));
+    cout << temp;
+    (*temp).displayMatrix();
+}
