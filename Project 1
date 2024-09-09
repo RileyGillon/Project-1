@@ -1,0 +1,215 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+//define all your classes here (as given above)
+class SparseRow {
+   protected:
+        int row; //Row#
+        int col; //Column#
+        int value; //We will assume that all our values will be integers
+    public:
+        // Default constructor
+        SparseRow() : row(-1), col(-1), value(0) {}
+        SparseRow(int r, int c, int v) : row(r), col(c), value(v) {}
+        void display() const {
+            cout << row << ", " << col << ", " << value << endl;
+        }
+
+        // Getter for row
+        int getRow() const { return row; }
+        // Getter for col
+        int getCol() const { return col; }
+        // Getter for value
+        int getValue() const { return value; }
+
+        void print(ostream& s) const {
+            s << row << ", " << col << ", " << value;
+        }
+        void setValue(int v) { value = v; }
+};
+
+ostream& operator<<(ostream& s, const SparseRow& sr) {
+    sr.print(s);
+    return s;
+}
+
+class SparseMatrix {
+    protected:
+        int noRows; //Number of rows of the original matrix
+        int noCols; //Number of columns of the original matrix
+        int commonValue; //read from input
+        int noNonSparseValues;
+        SparseRow* myMatrix; //Array
+    public:
+    SparseMatrix() : noRows(0), noCols(0), commonValue(0), noNonSparseValues(0), myMatrix(nullptr) {}
+    SparseMatrix(int noRows, int noCols, int commonValue, int noNonSparseValues)
+        : noRows(noRows), noCols(noCols), commonValue(commonValue), noNonSparseValues(noNonSparseValues) {
+        myMatrix = new SparseRow[noNonSparseValues];  // Dynamically allocate array of SparseRow
+    }
+    
+    // Clean up dynamic memory
+    ~SparseMatrix() {
+        delete[] myMatrix;  
+    }
+    
+    void readMatrix() {
+        int value;
+        int index = 0;
+        for (int i = 0; i < noRows; ++i) {
+            for (int j = 0; j < noCols; ++j) {
+                cin >> value;
+                if (value != commonValue) {
+                    myMatrix[index++] = SparseRow(i, j, value);  
+                }
+            }
+        }
+    }
+
+    void displaySparse() const {
+        for (int i = 0; i < noNonSparseValues; ++i) {
+            myMatrix[i].display();
+        }
+    }
+
+    void displayMatrix() const {
+        int index = 0;
+        for (int i = 0; i < noRows; i++) { 
+            for (int j = 0; j < noCols; j++) { 
+                if (index < noNonSparseValues && myMatrix[index].getRow() == i && myMatrix[index].getCol() == j) {
+                    cout << myMatrix[index].getValue() << " ";
+                    index++;
+                } else {
+                    cout << commonValue << " ";
+                }
+            }
+            cout << endl;
+        }
+    }
+    
+    // Transpose the matrix
+    SparseMatrix* Transpose() const {
+        SparseMatrix* transposed = new SparseMatrix(noCols, noRows, commonValue, noNonSparseValues);
+        for (int i = 0; i < noNonSparseValues; ++i) {
+            transposed->myMatrix[i] = SparseRow(myMatrix[i].getCol(), myMatrix[i].getRow(), myMatrix[i].getValue());
+        }
+        return transposed;
+    }
+
+    // Add two matrices and display the result as a full matrix
+    SparseMatrix* Addition(SparseMatrix* other) {
+        if (noRows != other->noRows || noCols != other->noCols) {
+            cout << "Matrix addition is not possible" << endl;
+            return nullptr;
+        }
+
+        // Create a temporary full matrix to store the result
+        vector<vector<int>> result(noRows, vector<int>(noCols, commonValue));
+
+        // Add elements from the first matrix
+        for (int i = 0; i < noNonSparseValues; ++i) {
+            result[myMatrix[i].getRow()][myMatrix[i].getCol()] = myMatrix[i].getValue();
+        }
+
+        // Add elements from the second matrix
+        for (int i = 0; i < other->noNonSparseValues; ++i) {
+            int row = other->myMatrix[i].getRow();
+            int col = other->myMatrix[i].getCol();
+            result[row][col] += other->myMatrix[i].getValue();  
+        }
+
+        // Display the result as a full matrix
+        for (int i = 0; i < noRows; ++i) {
+            for (int j = 0; j < noCols; ++j) {
+                cout << result[i][j] << " ";
+            }
+            cout << endl;
+        }
+        
+        // Returning nullptr as we're displaying the result directly
+        return nullptr;
+    }
+
+    // Method to multiply two matrices and return the result
+    SparseMatrix* Multiply(SparseMatrix* other) {
+        if (noCols != other->noRows) {
+            cout << "Matrix multiplication is not possible" << endl;
+            return nullptr;
+        }
+
+        // Temporary structure to store the result
+        vector<vector<int>> result(noRows, vector<int>(other->noCols, commonValue));
+
+        // Sparse matrix multiplication
+        for (int i = 0; i < noNonSparseValues; ++i) {
+            for (int j = 0; j < other->noNonSparseValues; ++j) {
+                if (myMatrix[i].getCol() == other->myMatrix[j].getRow()) {
+                    result[myMatrix[i].getRow()][other->myMatrix[j].getCol()] += myMatrix[i].getValue() * other->myMatrix[j].getValue();
+                }
+            }
+        }
+
+        for (int i = 0; i < noRows; ++i) {
+            for (int j = 0; j < other->noCols; ++j) {
+                cout << result[i][j] << " ";
+            }
+            cout << endl;
+        }
+
+        return nullptr;
+    }
+};
+
+    ostream& operator<<(ostream& s, const SparseMatrix& sm) {
+        sm.displaySparse();
+        return s;
+    }
+    
+    
+
+int main() {
+    int noRows, noCols, commonValue, noNonSparseValues;
+    cin >> noRows >> noCols >> commonValue >> noNonSparseValues;
+
+    SparseMatrix* firstOne = new SparseMatrix(noRows, noCols, commonValue, noNonSparseValues);
+    SparseMatrix* temp;
+
+    firstOne->readMatrix();
+    cout << "First one in sparse matrix format" << endl;
+    cout << *firstOne;
+
+    cout << "After transpose" << endl;
+    temp = firstOne->Transpose();
+    cout << *temp;
+    delete temp;
+
+    cout << "First one in matrix format" << endl;
+    firstOne->displayMatrix();
+
+    cin >> noRows >> noCols >> commonValue >> noNonSparseValues;
+    SparseMatrix* secondOne = new SparseMatrix(noRows, noCols, commonValue, noNonSparseValues);
+
+    secondOne->readMatrix();
+
+    cout << "Second one in sparse matrix format" << endl;
+    cout << *secondOne;
+
+    cout << "After transpose" << endl;
+    temp = secondOne->Transpose();
+    cout << *temp;
+    delete temp;
+
+    cout << "Second one in matrix format" << endl;
+    secondOne->displayMatrix();
+
+    cout << "Matrix addition Result" << endl;
+    SparseMatrix* additionResult = firstOne->Addition(secondOne);
+
+    cout << "Matrix Multiplication Result" << endl;
+    SparseMatrix* multiplicationResult = firstOne->Multiply(secondOne);
+
+    delete firstOne;
+    delete secondOne;
+    
+    return 0;
+}
